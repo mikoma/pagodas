@@ -1,0 +1,26 @@
+{
+  "name": "Pagodas",
+  "description": "",
+  "license": "MIT",
+  "authors": [
+    { "name": "Michael Schaar" }
+  ],
+  "repositories": [
+  ],
+  "require": {
+    "php": ">=7.2",
+    "ext-pdo": "*",
+    "ext-json": "*",
+    "ext-apcu": "*"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "*"
+  },
+  "suggest": {
+  },
+  "autoload": {
+    "psr-4": {
+      "Pagodas\\": "src/"
+    }
+  }
+}
