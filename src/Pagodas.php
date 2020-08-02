@@ -32,8 +32,8 @@ class Pagodas
         if($this->metaCache->get('pagodasDirTime') === $this->templatesDirUpdateTime) {
             try {
                 if(include $templeCacheFile)
-                    return "from cache\n";
-                echo "file does not exist<br>";
+                    return $templeCacheFile;
+//                echo "file does not exist<br>";
             } catch (Exception $e) {
                 // file does not exist, let the script continue
             }
@@ -41,7 +41,7 @@ class Pagodas
             $this->clearCache();
             $this->metaCache->set('pagodasDirTime', $this->templatesDirUpdateTime);
         }
-        echo "create file<br>";
+//        echo "create file<br>";
         // else clear cache and rebuild f
         $progenitor = $this->getInheritance($template);
         $temple = $this->buildTemple($progenitor);
@@ -49,7 +49,7 @@ class Pagodas
             echo "cannot create file";
         chmod($templeCacheFile, 0777);
         require $templeCacheFile;
-        return "rebuilt @ {$this->templatesDirUpdateTime}";
+        return "$templeCacheFile";
     }
 
     private function getInheritance(string $templateFile) : string

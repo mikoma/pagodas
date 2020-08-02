@@ -10,19 +10,20 @@ class PagodasTest extends TestCase
     public function testInclusion()
     {
         $pgd = new Pagodas(__DIR__ . "/templates", __DIR__ . "/cache", new ApcuCacheStorage());
-        echo $pgd->render(
+        $filename = $pgd->render(
             "base.html",
             [
                 'title' => 'Pagodas',
                 'variable' => 'chicken'
             ]
         );
+        $this->assertFileEquals(__DIR__ . "/mockData/inclusionTemplate.php", $filename);
     }
 
     public function testInheritanceAndDefaultOverwriting()
     {
         $pgd = new Pagodas(__DIR__ . "/templates", __DIR__ . "/cache", new ApcuCacheStorage());
-        echo $pgd->render(
+        $filename = $pgd->render(
             "inheritText.html",
             [
                 'title' => 'Pagodas',
@@ -32,6 +33,7 @@ class PagodasTest extends TestCase
                 'header' => 'text.html'
             ]
         );
+        $this->assertFileEquals(__DIR__ . "/mockData/inheritanceTemplate.php", $filename);
     }
 
 
