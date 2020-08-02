@@ -15,6 +15,12 @@ class Pagodas
     private $templatesDirUpdateTime;
     private $templates;
 
+    /**
+     * Pagodas constructor.
+     * @param string $templatesDir directory where the templates are stored
+     * @param string $fileCacheDir directory where the merged templates will be cached
+     * @param CacheInterface $metaCache this will only store one single value: the time of template folder update
+     */
     public function __construct(string $templatesDir, string $fileCacheDir, CacheInterface $metaCache)
     {
         $this->templatesDir = $templatesDir;
@@ -23,6 +29,18 @@ class Pagodas
         $this->templatesDirUpdateTime = filemtime($this->templatesDir . "/.");
     }
 
+    /**
+     * The template file in templatesDir that is going to be rendered. Inheritance {{extends parent.section}} is auto-included.
+     * Default values {{section default.html}} are also auto-included if not overwritten by the $templates parameters
+     * @param string $template
+     * template variables that will be applied
+     * @param array $templateData
+     * specify templates that overwrite defaults like ['section' => 'section.html']
+     * @param array $templates
+     * filename of cached template file
+     * @return string
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     */
     public function render(string $template, array $templateData, array $templates = [])
     {
         $this->templates = $templates;
@@ -102,7 +120,7 @@ class Pagodas
         return true;
     }
 
-    public function deleteDirContent($path){
+    private function deleteDirContent($path){
         try{
             $iterator = new DirectoryIterator($path);
             foreach ($iterator as $fileInfo ) {
@@ -122,5 +140,4 @@ class Pagodas
         }
         return true;
     }
-
 }
