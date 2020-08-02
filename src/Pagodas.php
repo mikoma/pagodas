@@ -51,7 +51,6 @@ class Pagodas
             try {
                 if(include $templeCacheFile)
                     return $templeCacheFile;
-//                echo "file does not exist<br>";
             } catch (Exception $e) {
                 // file does not exist, let the script continue
             }
@@ -59,12 +58,11 @@ class Pagodas
             $this->clearCache();
             $this->metaCache->set('pagodasDirTime', $this->templatesDirUpdateTime);
         }
-//        echo "create file<br>";
         // else clear cache and rebuild f
         $progenitor = $this->getInheritance($template);
         $temple = $this->buildTemple($progenitor);
         if(!file_put_contents($templeCacheFile, $temple))
-            echo "cannot create file";
+            throw new Exception("Cannot create file '{$templeCacheFile}'.");
         chmod($templeCacheFile, 0777);
         require $templeCacheFile;
         return "$templeCacheFile";
@@ -86,7 +84,6 @@ class Pagodas
 
     private function buildTemple(string $templateFile, string $indentation = "")
     {
-        echo "building $templateFile<br>";
         $templateContent = file_get_contents($this->templatesDir . "/" . $templateFile);
         return preg_replace_callback_array(
             [
