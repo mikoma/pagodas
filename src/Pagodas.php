@@ -69,18 +69,22 @@ class Pagodas
         }
     }
 
-    private function buildTemple(string $templateFile)
+    private function buildTemple(string $templateFile, string $indentation = "")
     {
         echo "building $templateFile<br>";
         $templateContent = file_get_contents($this->templatesDir . "/" . $templateFile);
         return preg_replace_callback_array(
             [
+                //aply indentation
+                '#^(.*)$#m' => function ($match) use ($indentation) {
+                    return $indentation . $match[1];
+                },
                 // include child template (hereditary, provided or default) or remove parent identifier
-                '#\{\{(\w+) ((?:\w+)\.(?:\w+))\}\}\s#' => function ($match) {
-                    if($match[1] === 'extends') {
+                '#^(\s*)\{\{(\w+) ((?:\w+)\.(?:\w+))\}\}\s*$#m' => function ($match) {
+                    if($match[2] === 'extends') {
                         return "";
                     }
-                    return $this->buildTemple($this->templates[$match[1]] ?? $match[2]);
+                    return $this->buildTemple($this->templates[$match[2]] ?? $match[3], $match[1]);
                 },
                 // replace variables
                 '#\{\{\$(\w+)\}\}#' => function ($match){
