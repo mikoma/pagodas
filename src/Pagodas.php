@@ -12,11 +12,8 @@ class Pagodas
     private $templatesDir;
     private $fileCacheDir;
     private $metaCache;
-    private $templateFiles;
     private $templatesDirUpdateTime;
     private $templates;
-
-    private $inheritance;
 
     public function __construct(string $templatesDir, string $fileCacheDir, CacheInterface $metaCache)
     {
@@ -37,7 +34,7 @@ class Pagodas
                 if(include $templeCacheFile)
                     return "from cache\n";
                 echo "file does not exist<br>";
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // file does not exist, let the script continue
             }
         } else {
@@ -75,7 +72,7 @@ class Pagodas
         $templateContent = file_get_contents($this->templatesDir . "/" . $templateFile);
         return preg_replace_callback_array(
             [
-                //aply indentation
+                //apply indentation
                 '#^(.*)$#m' => function ($match) use ($indentation) {
                     return $indentation . $match[1];
                 },
@@ -85,6 +82,10 @@ class Pagodas
                         return "";
                     }
                     return $this->buildTemple($this->templates[$match[2]] ?? $match[3], $match[1]);
+                },
+                //remove empty lines
+                '#\n\s*(\r?\n)#' => function ($match) {
+                    return $match[1];
                 },
                 // replace variables
                 '#\{\{\$(\w+)\}\}#' => function ($match){
@@ -115,7 +116,7 @@ class Pagodas
                     @unlink($fileInfo->getPathname());
                 }
             }
-        } catch ( Exception $e ){
+        } catch (Exception $e) {
             // write log
             return false;
         }
