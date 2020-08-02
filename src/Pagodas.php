@@ -5,31 +5,34 @@ namespace Pagodas;
 
 use DirectoryIterator;
 use Exception;
+use Psr\SimpleCache\CacheInterface;
 
 class Pagodas
 {
     private $templatesDir;
-    private $cacheDir;
+    private $fileCacheDir;
+    private $metaCache;
     private $templateFiles;
     private $templatesDirUpdateTime;
     private $templates;
 
     private $inheritance;
 
-    public function __construct(string $templatesDir, string $cacheDir)
+    public function __construct(string $templatesDir, string $fileCacheDir, CacheInterface $metaCache)
     {
         $this->templatesDir = $templatesDir;
-        $this->cacheDir = $cacheDir;
+        $this->fileCacheDir = $fileCacheDir;
+        $this->metaCache = $metaCache;
         $this->templatesDirUpdateTime = filemtime($this->templatesDir . "/.");
     }
 
     public function render(string $template, array $templateData, array $templates = [])
     {
         $this->templates = $templates;
-        $templeCacheFile = $this->cacheDir . "/{$this->templatesDirUpdateTime}-" . preg_replace("!\.html!", ".php", $template);
+        $templeCacheFile = $this->fileCacheDir . "/{$this->templatesDirUpdateTime}-" . preg_replace("!\.html!", ".php", $template);
 
         // If template dir has not changed invoke cache
-        if(apcu_fetch('pagodasDirTime') === $this->templatesDirUpdateTime) {
+        if($this->metaCache->get('pagodasDirTime') === $this->templatesDirUpdateTime) {
             try {
                 if(include $templeCacheFile)
                     return "from cache\n";
@@ -39,28 +42,27 @@ class Pagodas
             }
         } else {
             $this->clearCache();
-            apcu_store('pagodasDirTime', $this->templatesDirUpdateTime);
-            $time = apcu_fetch('pagodasDirTime');
+            $this->metaCache->set('pagodasDirTime', $this->templatesDirUpdateTime);
         }
         echo "create file<br>";
         // else clear cache and rebuild f
-        $progenitor = $this->getInheritance($this->templatesDir . "/" . $template);
+        $progenitor = $this->getInheritance($template);
         $temple = $this->buildTemple($progenitor);
         if(!file_put_contents($templeCacheFile, $temple))
             echo "cannot create file";
         chmod($templeCacheFile, 0777);
         require $templeCacheFile;
-        return "rebuilt @ $time";
+        return "rebuilt @ {$this->templatesDirUpdateTime}";
     }
 
     private function getInheritance(string $templateFile) : string
     {
-        $content = file_get_contents($templateFile);
+        $content = file_get_contents($this->templatesDir . "/" . $templateFile);
 
         if(preg_match('!{{extends (\w+).(\w+)}}!', $content, $matches) === 1) {
             // this is a child template. If not set
             $this->templates[$matches[2]] = $templateFile;
-            return $this->getInheritance($this->templatesDir . "/" . $matches[1].'.html');
+            return $this->getInheritance($matches[1].'.html');
         } else {
             // this is the progenitor
             return $templateFile;
@@ -70,7 +72,7 @@ class Pagodas
     private function buildTemple(string $templateFile)
     {
         echo "building $templateFile<br>";
-        $templateContent = file_get_contents($templateFile);
+        $templateContent = file_get_contents($this->templatesDir . "/" . $templateFile);
         return preg_replace_callback_array(
             [
                 // include child template (hereditary, provided or default) or remove parent identifier
@@ -78,7 +80,7 @@ class Pagodas
                     if($match[1] === 'extends') {
                         return "";
                     }
-                    return $this->buildTemple($this->templates[$match[1]] ?? $this->templatesDir . "/" . $match[2]);
+                    return $this->buildTemple($this->templates[$match[1]] ?? $match[2]);
                 },
                 // replace variables
                 '#\{\{\$(\w+)\}\}#' => function ($match){
@@ -91,7 +93,7 @@ class Pagodas
 
     private function clearCache()
     {
-        $this->deleteDirContent($this->cacheDir);
+        $this->deleteDirContent($this->fileCacheDir);
         return true;
     }
 

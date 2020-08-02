@@ -11,7 +11,8 @@
     "php": ">=7.2",
     "ext-pdo": "*",
     "ext-json": "*",
-    "ext-apcu": "*"
+    "psr/simple-cache": "*",
+    "stepanrodionov/php-apcu-cache" : "2.0.3"
   },
   "require-dev": {
     "phpunit/phpunit": "*"
